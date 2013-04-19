@@ -1,6 +1,8 @@
 Generic HTTP Stub
 =================
 
+[![Build Status](https://travis-ci.org/headexplodes/http-stub-server.png)](https://travis-ci.org/headexplodes/http-stub-server)
+
 The Generic HTTP Stub Server (a.k.a. 'Stubby') is a protocol and server implementation for stubbing HTTP interactions, mainly aimed at automated acceptance testing. There's also some example client code in various languages.
 
 ## Overview
@@ -31,7 +33,7 @@ To stub the product information in the _given_ step we could send the following 
             "path": "/products/1000"
         },
         "response": {
-            "statusCode": 200,
+            "status": 200,
             "body": {
                 "productId": 100,
                 "productName": "USB Missile Launcher"
@@ -62,7 +64,7 @@ We could simply send the following message to the server instead:
             "path": "/products/.*"
         },
         "response": {
-            "statusCode": 404,
+            "status": 404,
             "body": "Product not found"
         }
     }
@@ -168,7 +170,7 @@ Extends `HTTP Message` (above), with additional fields:
         ...
         "method": <string>,
         "path": <string>,
-        "queryParams": [
+        "params": [
             {
                 "name": <string>
                 "value": <string>
@@ -187,11 +189,11 @@ Extends `HTTP Message` (above), with additional fields:
 
   **Required** when used in a pattern.
 
-* `queryParams`
+* `params`
 
   List of key-value pairs representing query parameters. The `name` is always a string, but the `value` is interpreted as a regular expression when used in patterns.
 
-  When matching a request, the stub server iterates over each query parameter in the `queryParams` array and attempts to find a match in the incoming request. If no match is found, the request as a whole is not matched. An incoming request that has additional query parameters that are not present in the `queryParams` array is still considered a successful match.
+  When matching a request, the stub server iterates over each query parameter in the `params` array and attempts to find a match in the incoming request. If no match is found, the request as a whole is not matched. An incoming request that has additional query parameters that are not present in the `params` array is still considered a successful match.
 
 ### HTTP Response
 
@@ -199,10 +201,10 @@ Extends `HTTP Message` (above), with additional fields:
 
     {
         ...
-        "statusCode": <integer>
+        "status": <integer>
     }
 
-* `statusCode`
+* `status`
 
   Integer representing the HTTP status code. 
 
@@ -231,7 +233,7 @@ Field details:
 
   The HTTP response to return when the request matches. **Required**.
 
-  Any field that is omitted will simply not appear in the response. For example, if the `response.body` field is omitted, there will be no body in the respones. Only the `response.statusCode` field is required.
+  Any field that is omitted will simply not appear in the response. For example, if the `response.body` field is omitted, there will be no body in the respones. Only the `response.status` field is required.
 
 * `delay`
 

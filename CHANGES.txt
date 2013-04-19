@@ -1,0 +1,11 @@
+Changes from 1.0 to 1.1:
+
+ * Changed artifact names from 'generic-http-stub-server' to 'http-stub-server'
+ * Renamed 'statusCode' field to 'status'
+ * Renamed 'queryParams' field to 'params'
+ * Removed 'contentType' field (use 'headers')
+ * Changed structure of '/_control/responses' (added an extra level of nesting, see documentation)
+ * Added support for filtering requests to '/_control/requests' (eg, '/control/requests?method=GET')
+ * Added support for executing JavaScript to mangle responses
+ * Fixed issue in JSON body matching (second field in a nested object was ignored)
+

@@ -2,9 +2,10 @@ package au.com.sensis.stubby.test;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
 import org.junit.Test;
+
+import au.com.sensis.stubby.test.model.JsonStubbedExchangeList;
+import au.com.sensis.stubby.test.support.TestBase;
 
 /*
  * When two identical request patterns are stubbed, the previous one should be deleted
@@ -15,35 +16,55 @@ public class DuplicateRequestPatternTest extends TestBase {
     private void assertSame(MessageBuilder... messages) {
         int status = 1; // use status code to identify requests
         for (MessageBuilder message : messages) {
-            message.status(status++).stub();
+            message.setResponseStatus(status).stub();
 
-            List<MessageBuilder> responses = responses();
+            JsonStubbedExchangeList responses = responses();
             assertEquals(1, responses.size());
-            assertEquals(status, responses.get(0).response.statusCode);
+            assertEquals(status, (int)responses.get(0).exchange.response.status);
 
             status++;
         }
     }
     
-    @SuppressWarnings("unused") // soon, soon...
     private void assertNotSame(MessageBuilder... messages) {
         int status = 1; // use status code to identify requests
         for (MessageBuilder message : messages) {
-            message.status(status++).stub();
+            message.setResponseStatus(status).stub();
 
-            List<MessageBuilder> responses = responses();
+            JsonStubbedExchangeList responses = responses();
             assertEquals(status, responses.size()); // size should grow
-            assertEquals(status, responses.get(0).response.statusCode);
+            assertEquals(status, (int)responses.get(0).exchange.response.status);
 
             status++;
         }
     }
 
     @Test
-    public void minimal() {
+    public void pathSame() {
         assertSame(
-                builder().path("/foo"),
-                builder().path("/foo"));
+                builder().setRequestPath("/foo"),
+                builder().setRequestPath("/foo"));
+    }
+    
+    @Test
+    public void pathDiffers() {
+        assertNotSame(
+                builder().setRequestPath("/foo1"),
+                builder().setRequestPath("/foo2"));
+    }
+    
+    @Test
+    public void querySame() {
+        assertSame(
+                builder().setRequestPath("/foo").addRequestParam("foo", "bar"),
+                builder().setRequestPath("/foo").addRequestParam("foo", "bar"));
+    }    
+    
+    @Test
+    public void queryDiffers() {
+        assertNotSame(
+                builder().setRequestPath("/foo").addRequestParam("foo", "bar1"),
+                builder().setRequestPath("/foo").addRequestParam("foo", "bar2"));
     }
 
 }

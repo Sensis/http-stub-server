@@ -7,8 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
-import au.com.sensis.stubby.HttpResponse;
-import au.com.sensis.stubby.utils.Pair;
+import au.com.sensis.stubby.service.model.StubServiceResult;
 
 /*
  * Generic stubbed controller that can be used to stub any URL
@@ -22,14 +21,14 @@ public class MatcherServlet extends AbstractStubServlet {
     @Override
     public void service(HttpServletRequest request, HttpServletResponse response) {
         try {
-            Pair<HttpResponse, Long> pair = service().findMatch(Transformer.fromServletRequest(request));
-            if (pair != null) {
-                Long delay = pair.getSecond();
+            StubServiceResult result = service().findMatch(Transformer.fromServletRequest(request));
+            if (result.matchFound()) {
+                Long delay = result.getDelay();
                 if (delay != null && delay > 0) {
                     LOGGER.info("Delayed request, sleeping for " + delay + " ms...");
                     Thread.sleep(delay);
                 }
-                Transformer.populateServletResponse(pair.getFirst(), response);
+                Transformer.populateServletResponse(result.getResponse(), response);
             } else {
                 returnNotFound(response, "No stubbed method matched request");
             }

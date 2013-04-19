@@ -11,12 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import au.com.sensis.stubby.HttpHeader;
-import au.com.sensis.stubby.HttpParam;
-import au.com.sensis.stubby.HttpRequest;
-import au.com.sensis.stubby.HttpResponse;
+import au.com.sensis.stubby.model.StubParam;
+import au.com.sensis.stubby.model.StubRequest;
+import au.com.sensis.stubby.model.StubResponse;
+import au.com.sensis.stubby.utils.JsonUtils;
 
 /*
  * Transform between stubby & Servlet HTTP structures
@@ -24,40 +23,34 @@ import au.com.sensis.stubby.HttpResponse;
 public class Transformer {
 
     @SuppressWarnings("unchecked")
-    public static List<HttpHeader> fromServletHeaders(HttpServletRequest request) {
-        List<HttpHeader> result = new ArrayList<HttpHeader>();
+    public static List<StubParam> fromServletHeaders(HttpServletRequest request) {
+        List<StubParam> result = new  ArrayList<StubParam>();
         Enumeration<String> headers = (Enumeration<String>)request.getHeaderNames();
         while (headers.hasMoreElements()) {
             String headerName = headers.nextElement();
             Enumeration<String> headerValues = (Enumeration<String>)request.getHeaders(headerName);
-            HttpHeader header = new HttpHeader();
-            header.setName(headerName.toLowerCase()); // all header names should be lower-cased
             while (headerValues.hasMoreElements()) {
-                header.getValues().add(headerValues.nextElement()); 
+                result.add(new StubParam(headerName, headerValues.nextElement()));
             }
-            result.add(header);
         }
         return result;
     }
     
     @SuppressWarnings("unchecked")
-    public static List<HttpParam> fromServletParams(HttpServletRequest request) {
-        List<HttpParam> result = new ArrayList<HttpParam>();
+    public static List<StubParam> fromServletParams(HttpServletRequest request) {
+        List<StubParam> result = new ArrayList<StubParam>();
         Enumeration<String> params = (Enumeration<String>)request.getParameterNames();
         while (params.hasMoreElements()) {
             String paramName = params.nextElement();
-            HttpParam param = new HttpParam();
-            param.setName(paramName);
             for (String value : request.getParameterValues(paramName)) {
-                param.getValues().add(value);
+                result.add(new StubParam(paramName, value));
             }
-            result.add(param);
         }
         return result;
     }
 
-    public static HttpRequest fromServletRequest(HttpServletRequest request) {
-        HttpRequest result = new HttpRequest();
+    public static StubRequest fromServletRequest(HttpServletRequest request) {
+        StubRequest result = new StubRequest();
         try {
             result.setPath(new URI(request.getRequestURL().toString()).getPath());
         } catch (URISyntaxException e) {
@@ -72,26 +65,20 @@ public class Transformer {
                 throw new RuntimeException(e);
             }
         }
-        for (HttpParam param : fromServletParams(request)) {
-            result.getParams().put(param.getName(), param);
-        }
-        for (HttpHeader header : fromServletHeaders(request)) {
-            result.getHeadersMap().put(header.getName(), header);
-        }
+        result.setParams(fromServletParams(request));
+        result.setHeaders(fromServletHeaders(request));
         return result;
     }
 
-    public static void populateServletResponse(HttpResponse message, HttpServletResponse response) throws IOException {
-        for (HttpHeader header : message.getHeadersMap().values()) {
-            for (String value : header.getValues()) {
-                response.setHeader(header.getName(), value);
-            }
+    public static void populateServletResponse(StubResponse message, HttpServletResponse response) throws IOException {
+        for (StubParam header : message.getHeaders()) {
+            response.setHeader(header.getName(), header.getValue());
         }
-        response.setStatus(message.getStatusCode());
+        response.setStatus(message.getStatus());
         if (message.getBody() instanceof String) {
             IOUtils.write(message.getBody().toString(), response.getOutputStream());
         } else {
-            new ObjectMapper().writeValue(response.getOutputStream(), message.getBody()); // assume deserialised JSON (ie, a Map) 
+            JsonUtils.serialize(response.getOutputStream(), message.getBody()); // assume deserialised JSON (ie, a Map) 
         }
     }
 

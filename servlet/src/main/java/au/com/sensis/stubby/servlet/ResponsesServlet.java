@@ -6,8 +6,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import au.com.sensis.stubby.StubbedResponse;
-
 /*
  * Handles operations on response collection (eg, 'POST /_control/responses')
  */
@@ -27,8 +25,7 @@ public class ResponsesServlet extends AbstractStubServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        StubbedResponse stubbedResponse = parseJsonBody(request, StubbedResponse.class);
-        service().addResponse(stubbedResponse);
+        jsonService().addResponse(request.getInputStream());
         returnOk(response);
     }
 

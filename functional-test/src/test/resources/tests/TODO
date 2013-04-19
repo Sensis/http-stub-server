@@ -1,5 +1,0 @@
-Dump ideas for tests here...
-
-* Ensure blank query parameters can be asserted (eg, you may want to assert that a parameter was given, but was blank).
-* Verify that if exactly the same pattern is posted twice, the original is removed and the new one added to the start of the queue (try all types of body patterns etc.)
-* Verify that delay is supported

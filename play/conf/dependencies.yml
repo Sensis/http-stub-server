@@ -2,7 +2,7 @@ require:
     - play
     - org.apache.httpcomponents -> httpclient 4.1.1
     - org.codehaus.jackson -> jackson-mapper-asl 1.9.7
-    - sensis -> generic-http-stub-server-core
+    - au.com.sensis -> http-stub-server-core
         
 repositories:
 
@@ -17,4 +17,4 @@ repositories:
         type: local
         artifact: ${application.path}/../[module]/dist/[module]-[version].jar
         contains:
-            - generic-http-stub-server-core
+            - http-stub-server-core

@@ -6,7 +6,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import au.com.sensis.stubby.NotFoundException;
+import au.com.sensis.stubby.service.NotFoundException;
 
 /*
  * Handles operations on requests (eg, 'GET /_control/requests/<index>')

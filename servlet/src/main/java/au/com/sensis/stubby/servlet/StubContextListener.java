@@ -3,7 +3,7 @@ package au.com.sensis.stubby.servlet;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import au.com.sensis.stubby.StubService;
+import au.com.sensis.stubby.service.StubService;
 
 public class StubContextListener implements ServletContextListener {
 
