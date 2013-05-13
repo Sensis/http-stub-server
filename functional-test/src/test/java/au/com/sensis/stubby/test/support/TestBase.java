@@ -1,5 +1,6 @@
 package au.com.sensis.stubby.test.support;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
@@ -118,6 +119,18 @@ public abstract class TestBase {
     
     protected boolean isTravisCi() { // set when running under Travis CI (travis-ci.org)
         return "true".equals(System.getenv("TRAVIS"));
+    }
+
+    protected void assertTimeTaken(long started, long ended, long expected) {
+        double tolerance = 500; // 1/2 second tolerance
+
+        if (!isTravisCi()) { // don't assert timing if running on Travis-CI (it's quite slow...)
+            assertEquals(expected, Math.abs(ended - started), tolerance); // assert delay within tolerance
+        }
+    }
+
+    protected long now() {
+        return System.currentTimeMillis();
     }
 
 }

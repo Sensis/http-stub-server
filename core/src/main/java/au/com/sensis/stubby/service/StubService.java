@@ -1,6 +1,7 @@
 package au.com.sensis.stubby.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -53,6 +54,7 @@ public class StubService {
                 }
             }
             LOGGER.info("Didn't match: " + request.getPath());
+            this.notifyAll(); // inform any waiting threads that a new request has come in
             return new StubServiceResult(attempts); // no match (empty list)
         } catch (Exception e) {
             throw new RuntimeException("Error matching request", e);
@@ -92,7 +94,26 @@ public class StubService {
             throw new NotFoundException("Response does not exist: " + index);
         }
     }
-    
+
+    public synchronized List<StubRequest> findRequests(StubRequest filter, long timeout) { // blocking call
+        long remaining = timeout;
+        while (remaining > 0) {
+            List<StubRequest> result = findRequests(filter);
+            if (result.isEmpty()) {
+                try {
+                    long start = System.currentTimeMillis();
+                    this.wait(remaining); // wait for a request to come in, or time to expire
+                    remaining -= System.currentTimeMillis() - start;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Interrupted while waiting for request");
+                }
+            } else {
+                return result;
+            }
+        }
+        return Collections.emptyList();
+    }
+
     public synchronized List<StubRequest> findRequests(StubRequest filter) {
         RequestPattern pattern = new RequestPattern(filter);
         List<StubRequest> result = new ArrayList<StubRequest>();

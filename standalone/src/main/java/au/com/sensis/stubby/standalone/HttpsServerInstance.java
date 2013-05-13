@@ -2,6 +2,7 @@ package au.com.sensis.stubby.standalone;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.Executor;
 
 import javax.net.ssl.SSLContext;
 
@@ -16,11 +17,12 @@ public class HttpsServerInstance extends ServerInstance {
 
     private HttpsServer server;
 
-    public HttpsServerInstance(int port, ServerHandler handler) throws IOException, NoSuchAlgorithmException {
+    public HttpsServerInstance(int port, ServerHandler handler, Executor executor) throws IOException, NoSuchAlgorithmException {
         checkConfig();
         this.server = HttpsServer.create(allInterfaces(port), SOCKET_BACKLOG);
         this.server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
         this.server.createContext("/", handler);
+        this.server.setExecutor(executor);
         this.server.start();
     }
         

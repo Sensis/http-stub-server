@@ -1,13 +1,20 @@
 package au.com.sensis.stubby.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
+import au.com.sensis.stubby.model.StubRequest;
 import org.apache.http.client.methods.HttpPost;
 import org.junit.Before;
 import org.junit.Test;
 
 import au.com.sensis.stubby.test.model.JsonRequestList;
 import au.com.sensis.stubby.test.support.TestBase;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FindRequestTest extends TestBase {
     
@@ -30,7 +37,7 @@ public class FindRequestTest extends TestBase {
     
     @Test
     public void testFindAll() {
-        JsonRequestList requests = client.findReqests("");
+        JsonRequestList requests = client.findRequests("");
         assertEquals(6, requests.size());
         assertEquals("/test6", requests.get(0).path); // assert most recent first
         assertEquals("/test1", requests.get(5).path);
@@ -38,44 +45,100 @@ public class FindRequestTest extends TestBase {
 
     @Test
     public void testFindPath() {
-        JsonRequestList requests = client.findReqests("path=/test1");
+        JsonRequestList requests = client.findRequests("path=/test1");
         assertEquals(1, requests.size());
         assertEquals("/test1", requests.get(0).path);
     }
     
     @Test
     public void testFindMethod() {
-        JsonRequestList requests = client.findReqests("method=DELETE");
+        JsonRequestList requests = client.findRequests("method=DELETE");
         assertEquals(1, requests.size());
         assertEquals("/test4", requests.get(0).path);
     }
     
     @Test
     public void testFindParam() {
-        JsonRequestList requests = client.findReqests("param[foo]=bar");
+        JsonRequestList requests = client.findRequests("param[foo]=bar");
         assertEquals(1, requests.size());
         assertEquals("/test2", requests.get(0).path);
     }
     
     @Test
     public void testFindParams() {
-        JsonRequestList requests = client.findReqests("param[foo]=bar1&param[foo]=bar2");
+        JsonRequestList requests = client.findRequests("param[foo]=bar1&param[foo]=bar2");
         assertEquals(1, requests.size());
         assertEquals("/test3", requests.get(0).path);
     }
     
     @Test
     public void testFindHeader() {
-        JsonRequestList requests = client.findReqests("header[X-FOO]=bar"); // test case insensitivity
+        JsonRequestList requests = client.findRequests("header[X-FOO]=bar"); // test case insensitivity
         assertEquals(1, requests.size());
         assertEquals("/test5", requests.get(0).path);
     }
     
     @Test
     public void testFindHeaders() {
-        JsonRequestList requests = client.findReqests("header[X-Foo]=bar1&header[X-Foo]=bar2");
+        JsonRequestList requests = client.findRequests("header[X-Foo]=bar1&header[X-Foo]=bar2");
         assertEquals(1, requests.size());
         assertEquals("/test6", requests.get(0).path);
     }
-    
+
+    @Test
+    public void testWait_noResults() {
+        client.reset();
+
+        long started = now();
+        JsonRequestList requests = client.findRequests("wait=2000");
+        long ended = now();
+
+        assertEquals(0, requests.size());
+        assertTimeTaken(started, ended, 2000); // expected approx. 2 seconds
+    }
+
+    @Test
+    public void testWait_zeroWait() {
+        client.reset();
+
+        long started = now();
+        JsonRequestList requests = client.findRequests("wait=0");
+        long ended = now();
+
+        assertEquals(0, requests.size());
+        assertTimeTaken(started, ended, 0); // expect result instantly
+    }
+
+    @Test
+    public void testWait_withResults() {
+        final AtomicReference<Exception> threadError = new AtomicReference<Exception>();
+
+        client.reset();
+        client.executeGet("/request1");
+
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Thread.sleep(2000); // attempt to make 'find' execute after parent thread starts waiting
+                    client.executeGet("/request2");
+                } catch (Exception e) {
+                    threadError.set(e);
+                }
+            }
+        }).start();
+
+        long started = now();
+        JsonRequestList requests = client.findRequests("path=/request2&wait=5000");
+        long ended = now();
+
+        assertEquals(1, requests.size());
+        assertEquals("/request2", requests.get(0).path);
+
+        if (threadError.get() != null) {
+            throw new RuntimeException("Thread threw an exception", threadError.get());
+        }
+
+        assertTimeTaken(started, ended, 2000); // expected approx. 2 seconds
+    }
+
 }

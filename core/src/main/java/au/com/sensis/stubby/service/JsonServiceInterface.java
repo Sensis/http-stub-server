@@ -63,8 +63,12 @@ public class JsonServiceInterface { // interface using serialized JSON strings/s
         JsonUtils.serialize(stream, service.getRequests());
     }
     
-    public String findRequest(StubRequest filter) throws NotFoundException {
+    public String findRequest(StubRequest filter) {
         return JsonUtils.serialize(service.findRequests(filter));
+    }
+
+    public String findRequest(StubRequest filter, long wait) {
+        return JsonUtils.serialize(service.findRequests(filter, wait));
     }
     
     public void findRequest(OutputStream stream, StubRequest filter) throws NotFoundException {

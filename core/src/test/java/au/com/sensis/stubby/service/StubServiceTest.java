@@ -1,10 +1,10 @@
 package au.com.sensis.stubby.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +15,8 @@ import au.com.sensis.stubby.model.StubRequest;
 import au.com.sensis.stubby.model.StubResponse;
 import au.com.sensis.stubby.service.model.StubServiceExchange;
 import au.com.sensis.stubby.service.model.StubServiceResult;
+
+import static org.junit.Assert.*;
 
 public class StubServiceTest {
 
@@ -187,4 +189,40 @@ public class StubServiceTest {
         filter.setParams(Arrays.asList(new StubParam("foo", "b.r")));
         assertEquals(1, service.findRequests(filter).size()); // should only match one of the requests
     }
+
+    @Test
+    public void testRequestFilterWaitNotFound() {
+        request.setPath("/test");
+        service.findMatch(new StubRequest(request));
+
+        StubRequest filter = new StubRequest();
+        filter.setPath("/foo");
+
+        assertEquals(0, service.findRequests(new StubRequest(filter), 100).size());
+    }
+
+    @Test
+    public void testRequestFilterWait() {
+        request.setPath("/test1");
+        service.findMatch(new StubRequest(request));
+
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Thread.sleep(1000); // attempt to make 'findMatch' execute after parent thread starts waiting
+                    request.setPath("/test2");
+                    service.findMatch(new StubRequest(request));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        StubRequest filter = new StubRequest();
+        filter.setPath("/test2"); // wait for second request
+
+        List<StubRequest> result = service.findRequests(new StubRequest(filter), 5000);
+        assertEquals(1, result.size());
+    }
+
 }

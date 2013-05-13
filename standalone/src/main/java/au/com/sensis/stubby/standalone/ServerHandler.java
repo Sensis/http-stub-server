@@ -168,7 +168,14 @@ public class ServerHandler implements HttpHandler {
             service.deleteRequests();
             returnOk(exchange);
         } else if (method.equals("GET")) {
-            returnJson(exchange, service.findRequests(createFilter(exchange)));
+            List<StubParam> params = Transformer.fromExchangeParams(exchange);
+            StubRequest filter = createFilter(params);
+            Long wait = getWaitParam(params);
+            if (wait != null && wait > 0) { // don't allow zero wait
+                returnJson(exchange, service.findRequests(filter, wait));
+            } else {
+                returnJson(exchange, service.findRequests(filter));
+            }
         } else {
             throw new RuntimeException("Unsupported method: " + method);
         }
@@ -186,12 +193,20 @@ public class ServerHandler implements HttpHandler {
             throw new RuntimeException("Unsupported method: " + method);
         }
     }
-    
-    private StubRequest createFilter(HttpExchange exchange) {
-        List<StubParam> params = Transformer.fromExchangeParams(exchange);
+
+    private StubRequest createFilter(List<StubParam> params) {
         return new RequestFilterBuilder().fromParams(params).getFilter();
     }
-    
+
+    private Long getWaitParam(List<StubParam> params) {
+        for (StubParam param : params) {
+            if ("wait".equals(param.getName())) {
+                return Long.parseLong(param.getValue());
+            }
+        }
+        return null; // not found
+    }
+
     private void handleShutdown(HttpExchange exchange) throws IOException {
         if (shutdownHook != null) {
             LOGGER.info("Received shutdown request, attempting to shutdown gracefully...");
