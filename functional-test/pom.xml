@@ -4,7 +4,7 @@
     <parent>
         <groupId>au.com.sensis</groupId>
         <artifactId>http-stub-server</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>http-stub-server-test</artifactId>
@@ -16,7 +16,7 @@
         <dependency>
             <groupId>au.com.sensis</groupId>
             <artifactId>http-stub-server-standalone</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -71,6 +71,13 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skipTests>${skipTests}</skipTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
