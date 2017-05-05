@@ -30,7 +30,7 @@ To stub the product information in the _given_ step we could send the following 
     {
         "request": {
             "method": "GET",
-            "path": "/products/1000"
+            "path": "/products/100"
         },
         "response": {
             "status": 200,
